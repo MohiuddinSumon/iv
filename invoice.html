@@ -617,6 +617,13 @@
                     <label>Invoice Number</label>
                     <input type="text" id="invoiceNumber" placeholder="INV-001" oninput="updatePreview()">
                 </div>
+                <div class="form-group">
+                    <label>Currency</label>
+                    <select id="currency" onchange="updatePreview()">
+                        <option value="USD">USD ($)</option>
+                        <option value="EUR">EUR (€)</option>
+                    </select>
+                </div>
                 <div class="form-row">
                     <div class="form-group">
                         <label>Invoice Date</label>
@@ -744,6 +751,52 @@
         // Initialize
         let items = [];
         let logoData = null;
+
+        // Currency configuration
+        const currencyConfig = {
+            USD: {
+                symbol: '$',
+                position: 'before',
+                decimalSeparator: '.',
+                thousandSeparator: ','
+            },
+            EUR: {
+                symbol: '€',
+                position: 'before',
+                decimalSeparator: '.',
+                thousandSeparator: ','
+            }
+        };
+
+        // Format currency based on selected currency
+        function formatCurrency(amount) {
+            const currency = document.getElementById('currency').value || 'USD';
+            const config = currencyConfig[currency];
+            const numAmount = Math.abs(amount);
+            
+            // Format with 2 decimal places
+            const fixed = numAmount.toFixed(2);
+            
+            // Split into integer and decimal parts
+            const parts = fixed.split('.');
+            let integerPart = parts[0];
+            const decimalPart = parts[1];
+            
+            // Add thousand separators to integer part
+            if (config.thousandSeparator) {
+                integerPart = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, config.thousandSeparator);
+            }
+            
+            // Combine parts with appropriate decimal separator
+            const finalAmount = integerPart + config.decimalSeparator + decimalPart;
+            
+            // Return with symbol in correct position
+            if (config.position === 'before') {
+                return config.symbol + finalAmount;
+            } else {
+                return finalAmount + ' ' + config.symbol;
+            }
+        }
 
         // Set default dates
         document.addEventListener('DOMContentLoaded', function() {
@@ -878,8 +931,8 @@
                     <tr>
                         <td class="item-desc">${escapeHtml(item.description) || 'Item description'}</td>
                         <td>${item.quantity || 0}</td>
-                        <td class="item-amount">$${(item.price || 0).toFixed(2)}</td>
-                        <td class="item-amount">$${amount.toFixed(2)}</td>
+                        <td class="item-amount">${formatCurrency(item.price || 0)}</td>
+                        <td class="item-amount">${formatCurrency(amount)}</td>
                     </tr>
                 `;
             }).join('');
@@ -890,10 +943,10 @@
             const tax = subtotal * (taxRate / 100);
             const total = subtotal + tax;
 
-            document.getElementById('previewSubtotal').textContent = '$' + subtotal.toFixed(2);
+            document.getElementById('previewSubtotal').textContent = formatCurrency(subtotal);
             document.getElementById('previewTaxRate').textContent = taxRate;
-            document.getElementById('previewTax').textContent = '$' + tax.toFixed(2);
-            document.getElementById('previewTotal').textContent = '$' + total.toFixed(2);
+            document.getElementById('previewTax').textContent = formatCurrency(tax);
+            document.getElementById('previewTotal').textContent = formatCurrency(total);
 
             // Hide tax row if no tax
             document.getElementById('taxRow').style.display = taxRate > 0 ? 'flex' : 'none';
