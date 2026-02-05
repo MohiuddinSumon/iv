@@ -89,3 +89,5 @@ invoice/
 ## Custom Domain
 
 After deployment, you can add a custom domain in your Vercel project settings.
+
+https://geniv.vercel.app/
